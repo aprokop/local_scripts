@@ -1,0 +1,75 @@
+#!/bin/bash
+
+# Parse command line arguments
+OPTIND=1
+
+num_threads=1
+while getopts "h?j:" opt; do
+  case "$opt" in
+    h|\?)
+      echo "$0 [-j <num_procs>] [<target>]"
+      exit 0
+      ;;
+    j) num_threads=$OPTARG
+      ;;
+    esac
+done
+
+shift $((OPTIND-1))
+[ "$1" = "--" ] && shift
+
+# Main section
+origdir=`pwd`
+
+# If target is not specified, build all targets in
+# current directory
+target=$1
+
+# Interpret signals correctly
+trap "cd $origdir" SIGINT SIGTERM
+
+# Try to find the ninja file somewhere in
+# the file hierarchy
+ninjaf='build.ninja'
+ninjadir=""
+if   test -e                          "$ninjaf"; then s=0; ninjadir="./"
+elif test -e                       "../$ninjaf"; then s=1; ninjadir="../"
+elif test -e                    "../../$ninjaf"; then s=2; ninjadir="../../"
+elif test -e                 "../../../$ninjaf"; then s=3; ninjadir="../../../"
+elif test -e              "../../../../$ninjaf"; then s=4; ninjadir="../../../../"
+elif test -e           "../../../../../$ninjaf"; then s=5; ninjadir="../../../../../"
+elif test -e        "../../../../../../$ninjaf"; then s=6; ninjadir="../../../../../../"
+elif test -e     "../../../../../../../$ninjaf"; then s=7; ninjadir="../../../../../../../"
+elif test -e  "../../../../../../../../$ninjaf"; then s=8; ninjadir="../../../../../../../../"
+else
+  # echo "Ninja build not found, trying to use make..."
+  make -j $num_threads $1
+  exit $?
+fi
+
+# Calculate the relative path of current directory
+# in respect to ninja build root
+curdir="."
+if [ "$s" -ne "0" ]; then
+  curdir=`echo $origdir | rev | cut -f -$s -d / | rev`
+fi
+
+cd $ninjadir
+if [[ "$target" != "" ]]; then
+  # Build the specified target
+  ninja $curdir/$target
+
+elif [ "$s" -eq "0" ]; then
+  ninja
+
+else
+  # Build all targets in current directory
+  targets=""
+  which parallel &> /dev/null
+  if [[ "$?" == "0" ]]; then
+    LANG="C" grep "^build $curdir" $ninjaf | parallel --no-notice --pipe "cut -f 1 -d: | sed 's/^build //'" | ninja -j $num_threads
+  else
+    LANG="C" grep "^build $curdir" $ninjaf | cut -f 1 -d: | sed 's/^build //' | ninja -j $num_threads
+  fi
+fi
+cd $origdir
