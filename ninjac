@@ -69,7 +69,7 @@ else
   if [[ "$?" == "0" ]]; then
     ninja -j $num_threads `LANG="C" grep "^build $curdir" $ninjaf | parallel --no-notice --pipe "cut -f 1 -d: | sed 's/^build //'"`
   else
-    ninja -j `LANG="C" grep "^build $curdir" $ninjaf | cut -f 1 -d: | sed 's/^build //'`
+    ninja -j $num_threads `LANG="C" grep "^build $curdir" $ninjaf | cut -f 1 -d: | sed 's/^build //'`
   fi
 fi
 cd $origdir
