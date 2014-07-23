@@ -67,9 +67,9 @@ else
   targets=""
   which parallel &> /dev/null
   if [[ "$?" == "0" ]]; then
-    LANG="C" grep "^build $curdir" $ninjaf | parallel --no-notice --pipe "cut -f 1 -d: | sed 's/^build //'" | ninja -j $num_threads
+    ninja -j $num_threads `LANG="C" grep "^build $curdir" $ninjaf | parallel --no-notice --pipe "cut -f 1 -d: | sed 's/^build //'"`
   else
-    LANG="C" grep "^build $curdir" $ninjaf | cut -f 1 -d: | sed 's/^build //' | ninja -j $num_threads
+    ninja -j `LANG="C" grep "^build $curdir" $ninjaf | cut -f 1 -d: | sed 's/^build //'`
   fi
 fi
 cd $origdir
