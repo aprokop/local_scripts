@@ -1,29 +1,10 @@
 #!/bin/bash
 
 # Parse command line arguments
-OPTIND=1
-
-num_threads=1
-while getopts "h?j:" opt; do
-  case "$opt" in
-    h|\?)
-      echo "$0 [-j <num_procs>] [<target>]"
-      exit 0
-      ;;
-    j) num_threads=$OPTARG
-      ;;
-    esac
-done
-
-shift $((OPTIND-1))
-[ "$1" = "--" ] && shift
+ninja_args="$@"
 
 # Main section
 origdir=`pwd`
-
-# If target is not specified, build all targets in
-# current directory
-target=$1
 
 # Interpret signals correctly
 trap "cd $origdir" SIGINT SIGTERM
@@ -42,8 +23,8 @@ elif test -e        "../../../../../../$ninjaf"; then s=6; ninjadir="../../../..
 elif test -e     "../../../../../../../$ninjaf"; then s=7; ninjadir="../../../../../../../"
 elif test -e  "../../../../../../../../$ninjaf"; then s=8; ninjadir="../../../../../../../../"
 else
-  # echo "Ninja build not found, trying to use make..."
-  make -j $num_threads $1
+  echo "Ninja build not found, trying to use make..."
+  make $ninja_args
   exit $?
 fi
 
@@ -55,21 +36,24 @@ if [ "$s" -ne "0" ]; then
 fi
 
 cd $ninjadir
-if [[ "$target" != "" ]]; then
-  # Build the specified target
-  ninja $curdir/$target
-
-elif [ "$s" -eq "0" ]; then
-  ninja
+if [ "$s" -eq "0" ]; then
+  ninja $ninja_args
+  rc=$?
 
 else
   # Build all targets in current directory
   targets=""
   which parallel &> /dev/null
   if [[ "$?" == "0" ]]; then
-    ninja -j $num_threads `LANG="C" grep "^build $curdir" $ninjaf | parallel --no-notice --pipe "cut -f 1 -d: | sed 's/^build //'"`
+    ninja $ninja_args `LANG="C" grep "^build $curdir" $ninjaf | parallel --no-notice --pipe "cut -f 1 -d: | sed 's/^build //'"`
+    rc=$?
   else
-    ninja -j $num_threads `LANG="C" grep "^build $curdir" $ninjaf | cut -f 1 -d: | sed 's/^build //'`
+    ninja $ninja_args `LANG="C" grep "^build $curdir" $ninjaf | cut -f 1 -d: | sed 's/^build //'`
+    rc=$?
   fi
 fi
 cd $origdir
+
+# return code is that of ninja
+# with this, you can use it as "ninjac && ctest"
+exit $rc
