@@ -1,0 +1,37 @@
+#!/bin/bash
+
+LIST_FILE=".list"
+READ_PROG="acroread"
+
+if [ "$1" == "" ]; then
+    echo "article [ read | list | current | add | rm ]"
+    exit
+fi
+
+if [ "$1" == "read" ]; then
+    READ_FILE="`head -n 1 $LIST_FILE`"
+    if test -e $READ_FILE; then
+	$READ_PROG $READ_FILE&
+    else
+	echo "Could not find current article: $READ_FILE"
+    fi
+elif [ "$1" == "list" ]; then
+    cat -n $LIST_FILE  | sed 's/_/\ /g' | awk -F "." '{print $1}'
+elif [ "$1" == "current" ]; then
+    head -n 1 $LIST_FILE
+elif [ "$1" == "rm" ]; then
+    # Remove read article
+    mv $LIST_FILE ${LIST_FILE}_
+    tail -n +2 ${LIST_FILE}_ > $LIST_FILE
+    rm -f ${LIST_FILE}_
+elif [ "$1" == "add" ]; then
+    touch $LIST_FILE
+    grep -F $2 $LIST_FILE > /dev/null
+    if (( $? == 1 )); then
+	echo "$2" >> $LIST_FILE
+    else
+	echo "The article is already in the queue"
+    fi
+else
+    echo "Unknown option"
+fi
