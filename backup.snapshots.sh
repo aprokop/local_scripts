@@ -69,14 +69,16 @@ if [ -d $SNAPSHOT_RW/$NAME.1 ] ; then
     $CP -alf $SNAPSHOT_RW/$NAME.1/. $SNAPSHOT_RW/$NAME.0
 fi
 
-# step 3: rsync from the system into the latest snapshot (notice that
-# rsync behaves like cp --remove-destination by default, so the destination
-# is unlinked first.  If it were not so, this would copy over the other
-# snapshot(s) too!
-$RSYNC					\
-    -va --delete --delete-excluded	\
-    --exclude-from="$EXCLUDES"		\
-    $HOME_DIR $SNAPSHOT_RW/$NAME ;
+# step 3
+# rsync from the system into the latest snapshot (notice that rsync behaves
+# like cp --remove-destination by default, so the destination is unlinked
+# first.  If it were not so, this would copy over the other snapshot(s) too!
+# --ignore-erros allows to delete even when encountering IO errors
+$RSYNC                              \
+    --ignore-errors                 \
+    -va --delete --delete-excluded  \
+    --exclude-from="$EXCLUDES"      \
+    $HOME_DIR $SNAPSHOT_RW/$NAME.0
 
 # step 4: update the mtime to reflect the snapshot time
 $TOUCH $SNAPSHOT_RW/$NAME.0
