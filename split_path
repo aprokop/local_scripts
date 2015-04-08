@@ -1,0 +1,17 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+while (my $s = <>)
+{
+	chomp $s;
+
+	my ($var, @dir) = split(/[=:]/, $s);
+
+	foreach my $d (@dir)
+	{
+		print "$var=$d\n";
+	}
+}
+
