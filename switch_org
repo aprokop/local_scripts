@@ -1,0 +1,27 @@
+#!/bin/bash
+
+cur_org=`readlink org`
+if [ "$?" -ne "0" ]; then
+  echo "No current org, exiting..."
+  exit 0
+fi
+
+if [ "$1" == "status" ] || [ "$1" == "st" ]; then
+  if   [ "$cur_org" == "org_personal" ]; then echo 'Current status "personal"'
+  elif [ "$cur_org" == "org_work" ];     then echo 'Current status "work"'
+  else echo "Current status <unknown> ($cur_org)"; fi
+  exit 0
+fi
+
+if   [ "$cur_org" == "org_personal" ]; then
+  rm -f org
+  ln -s org_work org
+  echo 'Switched to "work" mode'
+elif [ "$cur_org" == "org_work" ]; then
+  rm -f org
+  ln -s org_personal org
+  echo 'Switched to "personal" mode'
+else
+  echo "Uknown current org \""$cur_org"\", exiting..."
+fi
+exit 0
