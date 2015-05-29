@@ -1,0 +1,26 @@
+#!/bin/bash
+dpi_old=`xrdb -query | grep Xft.dpi | cut -f 2`
+
+if   [ "x$dpi_old" == "x166" ]; then
+    dpi_new=96
+    echo "Switching to dpi=$dpi_new"
+    sed -i "s/Xft.dpi:                166/Xft.dpi:                $dpi_new/" $HOME/.Xresources
+    echo "Xft.dpi:  $dpi_new" | xrdb -merge
+elif [ "x$dpi_old" == "x96" ]; then
+    dpi_new=166
+    echo "Switching to dpi=166"
+    sed -i "s/Xft.dpi:                96/Xft.dpi:                $dpi_new/" $HOME/.Xresources
+    echo "Xft.dpi: $dpi_new" | xrdb -merge
+else
+    echo "Unrecognized dpi=$dpi_old"
+fi
+
+# Signal xsettingsd
+# pid=$(xprop -name xsettingsd _NET_WM_PID 2> /dev/null | awk '{print $NF}')
+# if [ x"$pid" = x ]; then
+    # echo "..updating XSETTINGS"
+    # echo Xft/DPI $(( $dpi_new * 1024 )) > ~/.xsettingsd.local
+    # xsettingsd -c ~/.xsettingsd.local &
+# else
+    # kill -HUP $pid
+# fi

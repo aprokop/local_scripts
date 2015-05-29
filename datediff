@@ -1,0 +1,5 @@
+#!/bin/bash
+
+date1=2010-03-15
+date2=2012-04-16
+echo $((($(date -u -d $date1 +%s) - $(date -u -d $date2 +%s)) / 86400))

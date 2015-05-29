@@ -1,0 +1,16 @@
+#!/bin/bash
+HOST="192.168.1.101"
+PORT="37890"
+USER="prok"
+PASS="nhzZbFmr"
+FTPURL="ftp://$USER:$PASS@$HOST:$PORT"
+LCD="/home/prok/.opo"
+RCD="/"
+#DELETE="--delete"
+lftp -c "set ftp:list-options -a;
+open '$FTPURL';
+lcd   $LCD;
+cd    $RCD;
+mirror \
+       $DELETE \
+       --verbose"
