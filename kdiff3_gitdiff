@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# using kdiff3 as the side-by-side diff:
+/home/aprokop/local/bin/kdiff3 "$2" "$5"
+
+# using VIM
+# /usr/bin/vim -d "$2" "$5"
