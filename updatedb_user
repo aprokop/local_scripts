@@ -1,3 +1,5 @@
 #!/bin/bash
-updatedb -l 0 -o ~/.locate.db -U ~/ \
+updatedb -l 0 -o ~/.locate-home.db -U ~/ \
+    -n ".git .kde .backup"
+updatedb -l 0 -o ~/.locate-data.db -U /data \
     -n ".git .kde .backup"
