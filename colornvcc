@@ -8,7 +8,7 @@
 # A wrapper to colorize the output from Nvidia's cuda
 # compiler "nvcc".  This wrapper also outputs messages
 # in gcc format instead of nvcc's format so that tools
-# which parse gcc errors can find filenames and line 
+# which parse gcc errors can find filenames and line
 # numbers (e.g. eclipse).
 #
 # This colornvcc wrapper is based on the colorgcc wrapper:
@@ -33,14 +33,14 @@
 # Note:
 #
 # colornvcc will only emit color codes if:
-# 
+#
 #    (1) Its STDOUT is a tty and
 #    (2) the value of $TERM is not listed in the "nocolor" option.
 #
 # If colornvcc colorizes the output, the compiler's STDERR will be
 # combined with STDOUT. Otherwise, colornvcc just passes the output from
 # the compiler through without modification.
-# 
+#
 # Author: Kristi Tsukida <kristi.tsukida@gmail.com>
 # Started: April 23, 2009
 # Licence: GNU Public License
@@ -136,7 +136,7 @@ sub srcscan
 
    my($line, $normalColor) = @_;
 
-   my($srcon) = color("reset") . $colors{"srcColor"};
+   my($srcon)  = color("reset") . $colors{"srcColor"};
    my($srcoff) = color("reset") . $normalColor;
 
    $line = $normalColor . $line;
@@ -176,7 +176,7 @@ $compiler = $compilerPaths{$progName} || $compilerPaths{"nvcc"};
 die "$compiler is self-referencing"
         if ( -l $compiler and (stat $compiler)[1] == (stat $0)[1] );
 
-# Get the terminal type. 
+# Get the terminal type.
 $terminal = $ENV{"TERM"} || "dumb";
 
 # If it's in the list of terminal types not to color, or if
@@ -184,7 +184,7 @@ $terminal = $ENV{"TERM"} || "dumb";
 $noColor = "false";
 if (! -t STDOUT || $nocolor{$terminal})
 {
-   $noColor = "true"; 
+   $noColor = "true";
    #exec $compiler, @ARGV
    #   or die("Couldn't exec");
 }
@@ -196,7 +196,8 @@ $compiler_pid = open3('<&STDIN', \*NVCCOUT, \*NVCCOUT, $compiler, @ARGV);
 # Colorize the output from the compiler.
 while(<NVCCOUT>)
 {
-   if (m/^(.*?)\(([0-9]+)\):(.*)$/) # filename(lineno):message
+   if (m/^(.*?)\(([0-9]+)\):(.*)$/ ||   # filename(lineno):message
+       m/^(.*?):([0-9]+:[0-9]+):(.*)$/)  # filename:lineno:colno:message
    {
       $field1 = $1 || "";
       $field2 = $2 || "";
@@ -209,15 +210,19 @@ while(<NVCCOUT>)
       {
          # Warning
          print($colors{"warningFileNameColor"}, "$field1:", color("reset"));
-         print($colors{"warningNumberColor"}, "$field2:", color("reset"));
+         print($colors{"warningNumberColor"},   "$field2:", color("reset"));
          srcscan($field3, $colors{"warningMessageColor"});
       }
-      else 
+      elsif ($field3 =~ m/\s+(E|e)rror:.*/)
       {
          # Error
          print($colors{"errorFileNameColor"}, "$field1:", color("reset"));
-         print($colors{"errorNumberColor"}, "$field2:", color("reset"));
+         print($colors{"errorNumberColor"},   "$field2:", color("reset"));
          srcscan($field3, $colors{"errorMessageColor"});
+      }
+      else
+      {
+         print("$field1:$field2:$field3");
       }
       print("\n");
    }
