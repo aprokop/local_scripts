@@ -1,0 +1,22 @@
+#!/bin/sh
+set -euo pipefail
+
+webdir=~/docs/web_archive
+
+mkdir -p $webdir
+cd $webdir
+
+sqlite3 `find ~/.mozilla/ -name "places.sqlite"` \
+    "SELECT moz_places.url AS URL \
+     FROM moz_bookmarks JOIN moz_places ON moz_bookmarks.fk = moz_places.id" \
+     | sed -e "s/#.*//" | sed -e "s/&sid=.*$//" | sed -e "s/\/$//" \
+     | grep -v -e "^place:"  \
+     > .tmp
+
+for file in .tmp; do
+    wget --unlink --continue --page-requisites --timestamping --input-file $file && rm $file &
+done
+
+# find . -size +4M -delete
+
+cd -
