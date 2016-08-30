@@ -1,0 +1,707 @@
+#!/bin/env python3
+import fig, sys, math, optparse
+
+# FIXME: arrow colors (regression)
+# TODO (good test figure: lemma1.fig):
+# - tolerance parameter
+#   * for grouping identical coordinates
+#   * for detecting points on a circle
+# - recognize node labels (i.e. text near a circular node)
+# - only convert small circles into nodes
+
+_latexChars = {
+	'^':  r"{\textasciicircum}",
+	'~':  r"{\textasciitilde}",
+	'\\': r"{\textbackslash}",
+	'|':  r"{\textbar}",
+	'<':  r"{\textless}",
+	'>':  r"{\textgreater}",
+	'\"': r"{\textquotedblright}",
+	}
+
+# TODO: double-check and extract numbers from texmf/tex/latex/base/size1[012].clo
+_latexFontSizes = {
+	5: "tiny",
+	7: "scriptsize",
+	8: "footnotesize",
+	9: "small",
+	10: "normalsize",
+	12: "large",
+	14: "Large",
+	18: "LARGE",
+	20: "huge",
+	24: "Huge",
+	}
+
+def escapeLaTeX(s):
+	result = ""
+	for ch in s:
+		if ch in "$%_{}&#":
+			result += r'\%s' % ch
+		elif ch in r'^~\|<>"':
+			result += _latexChars[ch]
+		else:
+			result += ch
+	return result
+
+def latexFloat(num, fractDigits = 5):
+	result = ("%%20.%df" % fractDigits) % num
+	b = 0
+	while result[b] == " ":
+		b += 1
+	e = len(result)
+	while result[e-1] == "0":
+		e -= 1
+	if result[e-1] == ".":
+		e -= 1
+	return result[b:e]
+
+# --------------------------------------------------------------------
+
+_arrowMapping = {
+	fig.arStick  : 'to',
+	fig.arClosed : 'triangle 45',
+	fig.arClosedIndented : 'stealth',
+	fig.arClosedPointed : 'diamond',
+	}
+
+_capStyleMapping = {
+	fig.capStyleButt : 'butt',
+	fig.capStyleRound : 'round',
+	fig.capStyleProjecting : 'rect',
+	}
+
+_joinStyleMapping = {
+	fig.joinStyleMiter : 'miter',
+	fig.joinStyleBevel : 'bevel',
+	fig.joinStyleRound : 'round',
+	}
+
+_colorMapping = {
+	fig.colorBlack : 'black',
+	fig.colorBlue : 'blue',
+	fig.colorGreen : 'green',
+	fig.colorCyan : 'cyan',
+	fig.colorRed : 'red',
+	fig.colorMagenta : 'magenta',
+	fig.colorYellow : 'yellow',
+	fig.colorWhite : 'white',
+	}
+
+_fillStyleMapping = {
+# 	fig.fillStyleLeft30 : "",
+# 	fig.fillStyleRight30 : "",
+# 	fig.fillStyleCrossed30 : "",
+	fig.fillStyleLeft45 : "north west lines",
+	fig.fillStyleRight45 : "north east lines",
+ 	fig.fillStyleCrossed45 : "crosshatch",
+	fig.fillStyleHorizontalBricks : "bricks",
+# 	fig.fillStyleVerticalBricks : "",
+	fig.fillStyleHorizontalLines : "horizontal lines",
+	fig.fillStyleVerticalLines : "vertical lines",
+	fig.fillStyleCrosshatch : "grid",
+# 	fig.fillStyleHorizontalShingles1 : "",
+# 	fig.fillStyleHorizontalShingles2 : "",
+# 	fig.fillStyleVerticalShingles1 : "",
+# 	fig.fillStyleVerticalShingles2 : "",
+# 	fig.fillStyleFishScales : "",
+# 	fig.fillStyleSmallFishScales : "",
+# 	fig.fillStyleCircles : "",
+# 	fig.fillStyleHexagons : "",
+# 	fig.fillStyleOctagons : "",
+# 	fig.fillStyleHorizontalTireTreads : "",
+# 	fig.fillStyleVerticalTireTreads : "",
+	}
+
+def arrowCode(arrow):
+	if not arrow:
+		return ""
+	result = _arrowMapping[arrow.type]
+	if arrow.style == fig.asHollow and result in (
+		"triangle 45", "diamond"):
+		result = "open " + result
+	return result
+
+class Options(list):
+	def __setitem__(self, key, value):
+		if isinstance(key, int):
+			list.__setitem__(self, key, value)
+		else:
+			for i, (existing, _) in enumerate(self):
+				if key == existing:
+					del self[i]
+					break
+			self.append((key, value))
+
+	def __getitem__(self, index):
+		if isinstance(index, int):
+			list.__getitem__(self, index)
+		else:
+			for key, value in self:
+				if key == index:
+					return value
+			raise KeyError("Option '%s' not set!" % index)
+
+	def __delitem__(self, index):
+		if isinstance(index, int):
+			list.__delitem__(self, index)
+		else:
+			for i, (existing, value) in enumerate(self):
+				if index == existing:
+					list.__delitem__(self, i)
+					return
+			raise KeyError("Option '%s' not set!" % index)
+
+	def __str__(self):
+		if not self:
+			return ""
+		result = []
+		for key, value in self:
+			if value:
+				if key in ("style", "color"):
+					result.append(value)
+				else:
+					result.append("%s=%s" % (key, value))
+			else:
+				result.append(key)
+		return "[%s]" % (",".join(result), )
+
+	def get(self, key, default):
+		for existing, value in self:
+			if existing == key:
+				return value
+		return default
+
+	def __contains__(self, key):
+		for existing, value in self:
+			if existing == key:
+				return True
+		return False
+
+	def append(self, option):
+		if isinstance(option, str):
+			list.append(self, (option, None))
+		else:
+			assert len(option) == 2
+			list.append(self, option)
+
+class TikZConverter(object):
+	def __init__(self, figFile, outFile, includeBaseDir = ""):
+		self.figFile = figFile
+		self.outFile = outFile
+		if figFile.metric:
+			# if metric, 450 units is 1cm (in the default ppi setting of 1200)
+			self.scale = 8./3./figFile.ppi
+		else:
+			self.scale = 2.54/figFile.ppi # number from tneumann's fig2pgf
+		self.fontMag = self.figFile.magnification / 100.0
+
+		self.includeBaseDir = includeBaseDir
+		self.useTextNodes = True
+		self.textAnchor = "base"
+		self.splinesAsPolylines = True
+		self.detectClosing = True
+		self.detectNodes = False
+		self.maxNodeRadius = fig.unitCM
+		self.connectTolerance = None
+		self.logicalThickness = True
+		self.defineYAxis = True
+
+		self._circleNodeCount = 0
+		self._nodePositions = {}
+		self._definedColors = {}
+		self._warned = {}
+
+	def _warnOnce(self, message):
+		if not message in self._warned:
+			self._warned[message] = True
+			sys.stderr.write("WARNING: %s\n" % message)
+
+	def coordinate(self, xy):
+		"""xy should be a fig coordinate (fig.Vector) to be converted
+		to a TikZ coordinate (returned as str)."""
+
+		named = self._nodePositions.get(tuple(xy), None)
+		if named:
+			return "(%s)" % named
+		elif self.connectTolerance:
+			nearest = (self.connectTolerance, None)
+			for pos in self._nodePositions.keys():
+				if xy.dist(pos) < nearest[0]:
+					nearest = (xy.dist(pos), pos)
+			if nearest[1]:
+				return "(%s)" % self._nodePositions[nearest[1]]
+
+		x = xy[0]
+		y = xy[1]
+		if not self.defineYAxis:
+			y = -y
+		return "(%s,%s)" % (latexFloat(x*self.scale),
+							latexFloat(y*self.scale))
+
+	def dimensionCM(self, length):
+		return "%scm" % latexFloat(length*self.scale)
+
+	def figPt(self, figPt):
+		return "%sbp" % latexFloat(figPt*72./80, 1)
+
+	def getNode(self, circle): # TODO: allow other objects
+		if not self.detectNodes:
+			return None
+		if circle.radius[0] > self.maxNodeRadius:
+			return None
+		self._circleNodeCount += 1 # TODO: allow unnamed nodes
+		name = "circle%d" % self._circleNodeCount
+		self._nodePositions[tuple(circle.center)] = name
+		return name
+
+	def writePicture(self):
+		options = Options()
+		if self.optimalAppearance:
+			options.append("even odd rule")
+
+		if self.defineYAxis:
+			options["y"] = "-1cm"
+
+		self.outFile.write("\\begin{tikzpicture}%s\n" % options)
+
+		if self.detectNodes:
+			self.outFile.write("\n% circle nodes:\n")
+			circles = self.figFile.findObjects(type = fig.Circle)
+			for circle in circles:
+				if self.writeCircleNode(circle):
+					self.figFile.remove(circle) # don't output twice
+
+		for depth in reversed(self.figFile.layers()):
+			self.outFile.write("\n%% objects at depth %d:\n" % depth)
+			for o in self.figFile.layer(depth):
+				if self.detectClosing and isinstance(o, fig.Polyline):
+					if o.points[-1] == o.points[0]:
+						o.changeType(fig.ptPolygon)
+					if len(o.points) == 4:
+						bb = o.bounds()
+						isRect = True
+						for p in o.points:
+							if p[0] not in (bb.x1, bb.x2) or \
+							   p[1] not in (bb.y1, bb.y2):
+								isRect = False
+						if isRect:
+							o.changeType(fig.ptBox)
+				if o.comment:
+					c = o.comment.rstrip()
+					self.outFile.write("%%%s\n" % c.replace("\n", "\n%"))
+				if isinstance(o, fig.ArcBase):
+					self.writeArcBase(o)
+				elif isinstance(o, fig.Circle):
+					self.writeCircle(o)
+				elif isinstance(o, fig.EllipseBase):
+					self.writeEllipseBase(o)
+				elif type(o) == fig.PictureBBox:
+					self.writePictureBBox(o)
+				elif isinstance(o, fig.ArcBox):
+					self.writeArcBox(o)
+				elif isinstance(o, fig.PolyBox):
+					self.writePolyBox(o)
+				elif isinstance(o, fig.PolylineBase):
+					self.writePolylineBase(o)
+				elif isinstance(o, fig.SplineBase):
+					self.writeSplineBase(o)
+				elif isinstance(o, fig.Text):
+					if self.useTextNodes:
+						self.writeTextNode(o)
+					else:
+						self.writeText(o)
+				else:
+					self._warnOnce("%s objects not yet supported!" % type(o))
+
+		self.outFile.write("\n\\end{tikzpicture}%\n")
+
+	def defineColor(self, name, figColor):
+		if figColor in _colorMapping:
+			return _colorMapping[figColor]
+
+		r, g, b = self.figFile.colorRGB(figColor)
+		if self._definedColors.get(name, None) != (r,g,b):
+			if r == g == b:
+				self.outFile.write(
+					"\\definecolor{%s}{gray}{%s}\n" % (name, latexFloat(r/255.)))
+			else:
+				self.outFile.write(
+					"\\definecolor{%s}{rgb}{%s,%s,%s}\n" %
+					(name, latexFloat(r/255.), latexFloat(g/255.), latexFloat(b/255.)))
+			self._definedColors[name] = (r,g,b)
+		return name
+
+	def tikzOptions(self, object):
+		options = Options()
+
+		if object.lineWidth:
+			if object.penColor != fig.colorDefault:
+				penColor = self.defineColor("penColor", object.penColor)
+				options["draw"] = penColor
+			else:
+				options["draw"] = None
+
+			if object.lineWidth > 1:
+				if self.logicalThickness and object.lineWidth <= 5:
+					options.append(("semithick", "thick", "very thick", "ultra thick")[object.lineWidth-2])
+				else:
+					options["line width"] = self.figPt(object.lineWidth-1)
+			if object.capStyle != fig.capStyleButt:
+				options["cap"] = _capStyleMapping[object.capStyle]
+			if object.joinStyle != fig.joinStyleMiter:
+				options["join"] = _joinStyleMapping[object.joinStyle]
+
+		if object.fillStyle != fig.fillStyleNone:
+			pattern = ""
+			fillColor = None
+			if object.fillColor != fig.colorDefault:
+				if object.fillColor == object.penColor and object.lineWidth:
+					fillColor = penColor
+				else:
+					fillColor = self.defineColor("fillColor", object.fillColor)
+
+			if object.fillStyle == fig.fillStyleSolid:
+				pass
+			elif object.fillStyle < fig.fillStyleSolid:
+				if not fillColor or fillColor == "black":
+					fillColor = "black!%s" % (object.fillStyle*5)
+				else:
+					fillColor += "!%d!black" % (object.fillStyle*5)
+			elif object.fillStyle <= fig.fillStyleWhite:
+				if fillColor in ("black", "white", None):
+					self._warnOnce("fill style %s with %s fill color should not happen!" % (object.fillStyle, fillColor or "default"))
+				fillColor += "!%d" % (100 - (object.fillStyle - fig.fillStyleSolid)*5)
+			elif object.fillStyle in _fillStyleMapping:
+				pattern = _fillStyleMapping[object.fillStyle]
+			else:
+				self._warnOnce("fill style %s not yet supported!" % object.fillStyle)
+
+			if fillColor is not None and fillColor == options.get("draw", False):
+				options["draw"] = None
+				options["fill"] = None
+				options["color"] = fillColor
+			else:
+				options["fill"] = fillColor
+
+			if pattern:
+				options["pattern"] = pattern
+
+		if object.lineStyle == fig.lineStyleDotted:
+			options["style"] = "dotted"
+		elif object.lineStyle == fig.lineStyleDashed:
+			options["style"] = "dashed"
+		elif object.lineStyle not in (fig.lineStyleDefault, fig.lineStyleSolid):
+			# TODO style=solid in TikZ?
+			self._warnOnce("line style %s not yet supported!" % object.lineStyle)
+
+		if object.forwardArrow or object.backwardArrow:
+			options["arrows"] = "%s-%s" % (
+				arrowCode(object.backwardArrow),
+				arrowCode(object.forwardArrow))
+
+		# simplifications:
+		if "draw" in options and not "fill" in options:
+			# \path[draw=black] -> \path[draw,color=black] {.. \draw[black] }
+			if options["draw"] is not None:
+				options["color"] = options["draw"]
+			options["draw"] = None # should become \draw
+
+		return options
+
+	def pathIntro(self, object, options = None):
+		if not options:
+			options = self.tikzOptions(object)
+		else:
+			options.extend(self.tikzOptions(object))
+
+		command = ""
+		if options.get("draw", False) is None:
+			command = "draw"
+			del options["draw"]
+		if options.get("fill", False) is None:
+			command = "fill" + command
+			del options["fill"]
+
+		if not command:
+			command = "path"
+			#return "%"
+		return "\\%s%s" % (command, options)
+
+	def writeArcBase(self, arc):
+		a1, a2 = arc.angles()
+		startPoint = 0
+
+		a1 = int(round(math.degrees(a1)))
+		a2 = int(round(math.degrees(a2)))
+		if a2 >= 360:
+			temp = a1
+			a1 = a2 - 360
+			a2 = temp - 360
+			startPoint = 2
+		elif a2 <= -360:
+			temp = a1
+			a1 = a2 + 360
+			a2 = temp + 360
+			startPoint = 2
+
+		if startPoint:
+			arc.forwardArrow, arc.backwardArrow = \
+							  arc.backwardArrow, arc.forwardArrow
+
+		draw = cycle = ""
+		if arc.closed():
+			draw = "-- "
+			cycle = " -- %s -- cycle" % self.coordinate(arc.center)
+
+		if self.defineYAxis:
+			a1 = -a1
+			a2 = -a2
+		self.outFile.write("%s %s %s+(%s:%s) arc (%s:%s:%s)%s;\n" % (
+			self.pathIntro(arc),
+			self.coordinate(arc.center),
+			draw, a1, latexFloat(arc.radius()*self.scale),
+			a1, a2,
+			latexFloat(arc.radius()*self.scale),
+			cycle))
+
+	def writeEllipseBase(self, ellipse):
+		# TODO: ellipse.angle
+		self.outFile.write("%s %s ellipse (%s and %s);\n" % (
+			self.pathIntro(ellipse),
+			self.coordinate(ellipse.center),
+			self.dimensionCM(ellipse.radius[0]),
+			self.dimensionCM(ellipse.radius[1])))
+
+	def writeCircleNode(self, circle):
+		center = self.coordinate(circle.center)
+		node = self.getNode(circle)
+		if not node:
+			return
+		options = self.tikzOptions(circle)
+		options.insert(0, ("circle", None))
+		if node: # named node?
+			node = " (%s)" % node
+		options["minimum size"] = self.dimensionCM(circle.radius[0]*2)
+		self.outFile.write("\\node%s at %s%s {};\n" % (
+			options, center, node))
+		return node
+
+	def writeCircle(self, circle):
+		center = self.coordinate(circle.center)
+		self.outFile.write("%s %s circle (%s);\n" % (
+			self.pathIntro(circle), center,
+			self.dimensionCM(circle.radius[0])))
+
+	def writePolylineBase(self, poly):
+		path = " -- ".join(map(self.coordinate, poly.points))
+		if poly.closed():
+			path += " -- cycle"
+		self.outFile.write(
+			"%s %s;\n" % (self.pathIntro(poly), path))
+
+	def writeSplineBase(self, spline):
+		if not spline.closed() and len(spline.points) == 3:
+			self.outFile.write(
+				"%s %s .. controls %s .. %s;\n" % (
+				(self.pathIntro(spline), ) + tuple(
+				map(self.coordinate, spline.points))))
+			return
+
+		if self.splinesAsPolylines:
+			return self.writePolylineBase(spline)
+		else:
+			self._warnOnce("X-splines cannot be 100% correctly converted!")
+
+		self.outFile.write(self.pathIntro(spline))
+
+		cycle = spline.closed() and " cycle" or ""
+
+		self.outFile.write(" plot[smooth%s] coordinates {%s};\n" % (
+			cycle, " ".join(map(self.coordinate, spline.points))))
+
+	def writePolyBox(self, polyBox):
+		self.outFile.write("%s %s rectangle %s;\n" % (
+			self.pathIntro(polyBox),
+			self.coordinate(polyBox.points[0]),
+			self.coordinate(polyBox.points[2])))
+
+	def writeArcBox(self, arcBox):
+		self.outFile.write("%s %s rectangle %s;\n" % (
+			self.pathIntro(arcBox, options = Options([
+			("rounded corners", self.figPt(arcBox.radius))])),
+			self.coordinate(arcBox.points[0]),
+			self.coordinate(arcBox.points[2])))
+
+	def writePictureBBox(self, pictureBBox):
+		nodeOptions = Options()
+		nodeOptions["anchor"] = "north west"
+		nodeOptions["inner sep"] = "0pt"
+
+		self.outFile.write("\\node%s at %s {\\includegraphics[width=%s,height=%s]{%s%s}};\n" % (
+			nodeOptions,
+			self.coordinate(pictureBBox.bounds().upperLeft()),
+			self.dimensionCM(pictureBBox.bounds().width()),
+			self.dimensionCM(pictureBBox.bounds().height()),
+			self.includeBaseDir,
+			pictureBBox.filename))
+
+	def _textSizeCommand(self, text):
+		result = ""
+
+		texSize = text.fontSize
+		if not text.fontFlags & fig.ffRigid:
+			texSize *= self.fontMag
+
+		if texSize: # TODO: allow setting e.g. fontMag to 0 to prevent this:
+			if texSize in _latexFontSizes: # TODO: switchable, 12pt support
+				if texSize != 10:
+					result = r"\%s{}" % (_latexFontSizes[texSize], )
+			else:
+				baselineSkip = texSize * 1.2
+				result = r"\fontsize{%s}{%s}\selectfont{}" % (
+					texSize, baselineSkip, )
+
+		return result
+
+	def _textInFont(self, text):
+		if text.font == fig.fontZapfDingbats:
+			# FIXME: \usepackage{pifont}
+			result = "".join([r"\ding{%d}" % ord(ch) for ch in text.text])
+		elif text.fontFlags & fig.ffSpecial:
+			result = text.text
+		else:
+			result = escapeLaTeX(text.text)
+
+		if text.fontFlags & fig.ffPostScript:
+			pass # TODO
+		else:
+			if text.font == fig.fontLaTeXDefault:
+				pass
+			elif text.font == fig.fontLaTeXRoman:
+				result = r"\rmfamily " + result
+			elif text.font == fig.fontLaTeXBold:
+				result = r"\bfseries " + result
+			elif text.font == fig.fontLaTeXItalic:
+				result = r"\itshape " + result
+			elif text.font == fig.fontLaTeXSansSerif:
+				result = r"\sffamily " + result
+			elif text.font == fig.fontLaTeXTypewriter:
+				result = r"\ttfamily " + result
+
+		return result
+
+	def writeText(self, text):
+		if text.fontFlags & fig.ffHidden:
+			return
+
+		options = ["base"]
+
+		if text.alignment == fig.alignLeft:
+			options.append("left")
+		elif text.alignment == fig.alignRight:
+			options.append("right")
+
+		if text.pos[0]:
+			options.append("x=%s" % self.dimensionCM(text.pos[0]))
+		if text.pos[1]:
+			options.append("y=%s" % self.dimensionCM(-text.pos[1]))
+		if text.angle:
+			options.append("rotate=%s" % round(math.degrees(text.angle)))
+
+		str = self._textInFont(text)
+
+		if text.penColor != fig.colorDefault:
+			textColor = self.defineColor("textColor", text.penColor)
+			str = r"\color{%s}%s" % (textColor, str)
+
+		self.outFile.write("\\pgftext[%s]{%s%s}\n" % (
+			",".join(options),
+			self._textSizeCommand(text), str))
+
+	def writeTextNode(self, text):
+		if text.fontFlags & fig.ffHidden:
+			return
+
+		options = Options()
+		nodeOptions = Options()
+
+		if text.penColor != fig.colorDefault:
+			nodeOptions["text"] = self.defineColor("textColor", text.penColor)
+
+		anchor = self.textAnchor
+		if text.alignment == fig.alignLeft:
+			anchor += " west"
+		elif text.alignment == fig.alignRight:
+			anchor += " east"
+		nodeOptions["anchor"] = anchor
+
+		if text.angle:
+			nodeOptions["rotate"] = round(math.degrees(text.angle))
+
+		str = self._textInFont(text)
+
+		self.outFile.write("\\path%s %s node%s {%s%s};\n" % (
+			options,
+			self.coordinate(text.pos), nodeOptions,
+			self._textSizeCommand(text), str))
+
+# --------------------------------------------------------------------
+
+op = optparse.OptionParser(usage="%prog [options] foo.fig > foo.tikz")
+op.add_option("-a", "--appearance", action = "store_true",
+			  dest = "appearance", default = False,
+			  help = "optimize for most similar appearance at the price of more verbose code (default: off)")
+op.add_option("-b", "--basedir", action = "store",
+			  dest = "baseDir", default = "", metavar = "IMAGEDIR/",
+			  help = "path prefix that is directly prepended before image filenames (use this if you \\input the TikZ code from another directory)")
+op.add_option("-y", "--yaxis", action = "store_false",
+			  dest = "defineYAxis", default = True,
+			  help = "don't redefine Y axis (default: use y=-1cm for more natural coordinates within TikZ code)")
+op.add_option("--anchor", action = "store",
+			  dest = "textAnchor", default = "base",
+			  help = "vertical anchor, one of 'base', 'center', 'north', 'south' (default: base)")
+op.add_option("-f", "--nofonts", action = "store_true",
+			  dest = "nofonts", default = False,
+			  help = "do not output fontsize commands")
+op.add_option("--detectnodes", action = "store_true",
+			  dest = "detectNodes", default = False,
+			  help = "try to recognize graphs and connect named nodes (only circles ATM)")
+op.add_option("--scale", metavar = "FACTOR",
+			  dest = "scale", default = 1.0, type = "float",
+			  help = "scale whole figure by the given factor")
+op.add_option("--splines", metavar = "lines|plot",
+			  dest = "splines", default = "lines",
+			  help = "convert X-splines into polygonal lines (default) or smooth plots")
+# op.add_option("-t", "--textnodes", action = "store_true",
+# 			  dest = "textNodes", default = False,
+# 			  help = "put text into nodes (default: use \\pgftext, support rotation)")
+options, args = op.parse_args()
+
+if options.splines not in ("lines", "plot"):
+	op.error("argument of --splines must be either 'lines' or 'plot'")
+
+# FIXME: more natural arguments like
+# --pattern = off|on
+# --fonts off|type|on
+# --splines lines|plot
+
+# --------------------------------------------------------------------
+
+assert len(args) == 1
+
+c = TikZConverter(fig.File(args[0]), sys.stdout)
+c.includeBaseDir = options.baseDir
+c.scale *= options.scale
+c.detectNodes = options.detectNodes
+c.connectTolerance = options.detectNodes and fig.unitCM / 10. # FIXME
+#c.useTextNodes = options.textNodes
+c.textAnchor = options.textAnchor
+if options.nofonts:
+	c.fontMag = 0
+c.logicalThickness = not options.appearance
+c.optimalAppearance = options.appearance
+c.defineYAxis = options.defineYAxis
+c.splinesAsPolylines = options.splines == "lines"
+c.detectClosing = True # TODO?
+c.writePicture()
