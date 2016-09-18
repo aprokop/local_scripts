@@ -1,0 +1,3 @@
+#!/bin/bash
+xset fp+ /usr/share/fonts/terminus
+# xmodmap -e "keycode 30 = Delete"
