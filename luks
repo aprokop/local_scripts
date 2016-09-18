@@ -1,0 +1,70 @@
+#!/bin/bash
+
+HELP_STRING="Help:\n\tluks  mount <device> <mount_point>\n\tluks umount <mount_point>"
+
+if [[ $# -eq 1 ]]; then
+    if [ $1 = "-h" ]; then
+        echo -e $HELP_STRING
+        exit 0
+    fi
+fi
+
+if [[ $# -lt 2 ]]; then
+    echo "Wrong number of arguments"
+    echo -e $HELP_STRING
+    exit 1
+fi
+
+CMD=$1
+if [ "$CMD" != "mount" ] && [ "$CMD" != "umount" ]; then
+    echo "Wrong command: $CMD"
+    echo $-e HELP_STRING
+    exit 2
+fi
+
+if [ "$CMD" = "mount" ]; then
+    if [[ $# -ne 3 ]]; then
+        echo -e $HELP_STRING
+    fi
+
+    DEV="$2"
+    LOC="$3"
+
+    NAME="luks-`cryptsetup luksUUID $DEV`"
+    if [[ $? -ne 0 ]]; then
+        echo "Not a LUKS volume"
+        exit 3
+    fi
+
+    cryptsetup luksOpen $DEV $NAME
+    if [[ $? -ne 0 ]]; then
+        echo "Could not open LUKS volume"
+        exit 4
+    fi
+
+    mount /dev/mapper/$NAME $LOC
+    if [[ $? -ne 0 ]]; then
+        echo "Could not mount LUKS volume"
+        exit 4
+    fi
+
+elif [ $CMD = "umount" ]; then
+    if [[ $# -ne 2 ]]; then
+        echo $HELP_STRING
+    fi
+
+    LOC="${2%/}"
+    NAME=`mount | grep "on $LOC" | awk '{print $1}' | cut -d / -f 4`
+
+    umount $LOC
+    if [[ $? -ne 0 ]]; then
+        echo "Could not umount LUKS volume"
+        exit 4
+    fi
+
+    cryptsetup luksClose $NAME
+    if [[ $? -ne 0 ]]; then
+        echo "Could not close LUKS volume"
+        exit 4
+    fi
+fi
