@@ -1,9 +1,18 @@
 #!/bin/bash
 
-cur_org=`readlink org`
+# Hardcoded location of all org alternatives
+loc="$HOME/.personal"
+
+cur_org=`readlink $loc/org`
 if [ "$?" -ne "0" ]; then
   echo "No current org, exiting..."
   exit 0
+fi
+
+emacs_pid=`pgrep emacs`
+if [ "$?" -ne "1" ]; then
+    echo "Emacs process is running. Terminate first before switching..."
+    exit 0
 fi
 
 if [ "$1" == "status" ] || [ "$1" == "st" ]; then
@@ -14,13 +23,21 @@ if [ "$1" == "status" ] || [ "$1" == "st" ]; then
 fi
 
 if   [ "$cur_org" == "org_personal" ]; then
-  rm -f org
+  # personal -> work
+  cd $loc
+  rm -f $loc/org
   ln -s org_work org
+  cd ..
   echo 'Switched to "work" mode'
+
 elif [ "$cur_org" == "org_work" ]; then
+  # work -> personal
+  cd $loc
   rm -f org
   ln -s org_personal org
+  cd ..
   echo 'Switched to "personal" mode'
+
 else
   echo "Uknown current org \""$cur_org"\", exiting..."
 fi
