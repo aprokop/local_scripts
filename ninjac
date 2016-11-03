@@ -1,5 +1,7 @@
 #!/bin/bash
 
+NINJA="ninja-build"
+
 # Parse command line arguments
 ninja_args="$@"
 
@@ -37,7 +39,7 @@ fi
 
 cd $ninjadir
 if [ "$s" -eq "0" ]; then
-  ninja $ninja_args
+  $NINJA $ninja_args
   rc=$?
 
 else
@@ -45,10 +47,10 @@ else
   targets=""
   which parallel &> /dev/null
   if [[ "$?" == "0" ]]; then
-    ninja $ninja_args `LANG="C" grep "^build $curdir" $ninjaf | parallel --no-notice --pipe "cut -f 1 -d: | sed 's/^build //'"`
+    $NINJA $ninja_args `LANG="C" grep "^build $curdir" $ninjaf | parallel --no-notice --pipe "cut -f 1 -d: | sed 's/^build //'"`
     rc=$?
   else
-    ninja $ninja_args `LANG="C" grep "^build $curdir" $ninjaf | cut -f 1 -d: | sed 's/^build //'`
+    $NINJA $ninja_args `LANG="C" grep "^build $curdir" $ninjaf | cut -f 1 -d: | sed 's/^build //'`
     rc=$?
   fi
 fi
