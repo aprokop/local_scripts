@@ -18,7 +18,7 @@ fi
 CMD=$1
 if [ "$CMD" != "mount" ] && [ "$CMD" != "umount" ]; then
     echo "Wrong command: $CMD"
-    echo $-e HELP_STRING
+    echo -e HELP_STRING
     exit 2
 fi
 
@@ -50,7 +50,7 @@ if [ "$CMD" = "mount" ]; then
 
 elif [ $CMD = "umount" ]; then
     if [[ $# -ne 2 ]]; then
-        echo $HELP_STRING
+        echo -e $HELP_STRING
     fi
 
     LOC="${2%/}"
