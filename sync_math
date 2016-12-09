@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# NOTE: do not use --delete unless you are 100% sure
+if   [ "$1" = "to_workstation" ]; then
+    rsync -avz $2 -e ssh math workstation:docs
+elif [ "$1" = "from_workstation" ]; then
+    rsync -avz $2 -e ssh workstation:docs/math .
+else
+    echo "Usage: ./sync {to_workstation|from_workstation} [--delete-after|-in]"
+fi
+# rsync -avz -e ssh --delete workstation:docs/cs .
