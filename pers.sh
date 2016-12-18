@@ -1,6 +1,7 @@
 #!/bin/bash
-PERSONAL="/home/prok/.personal"
+PERSONAL=".personal"
 
+cwd=`pwd`
 cd $HOME
 
 xstring=""
@@ -25,3 +26,5 @@ cd -
 file="personal_`date +'%Y_%m_%d'`.tbz2"
 tar ${xstring} -cjvhf $file $PERSONAL
 gpg -c --cipher-algo AES256 $file && rm $file
+
+cd $cwd
