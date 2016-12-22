@@ -29,13 +29,21 @@ ln -s $P/configs/.gitconfig .
 ln -s $P/configs/.tmux.conf .
 ln -s $P/configs/.vimrc .
 ln -s $P/configs/.vim .
+
+# Setup VIM
 mkdir -p $HOME/.vim/bundle
-git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/vundle.vim
 vim +PluginInstall +qall
+cd $HOME/.vim/bundle/youcompleteme
+cd ./install.py --clang-completer
+cd $HOME
 
 mkdir -p $HOME/local/share/git
 cd $HOME/local/share/git
 ln -s $HOME/.personal/scripts/git-prompt.sh .
+cd $HOME
 
 mkdir -p $HOME/local/share/bash-completion/completions
+cd $HOME/local/share/bash-completion/completions
 ln -s $HOME/.personal/scripts/bash_completions/tmux
+cd $HOME
