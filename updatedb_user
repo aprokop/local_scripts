@@ -1,13 +1,15 @@
 #!/bin/bash
-updatedb -l 0 -o ~/.locate.db -U ~/ \
-    -e /home/prok/.kde4/share/apps/okular/docdata \
-    -e /home/prok/.wine \
-    -e /home/prok/.backup \
-    -n .git
+host=`hostname`
 
-
-# Old sandia configuration with 2 partitions
-# updatedb -l 0 -o ~/.locate-home.db -U ~/ \
-    # -n ".git .kde .backup"
-# updatedb -l 0 -o ~/.locate-data.db -U /data \
-    # -n ".git .kde .backup"
+if [[ "$host" != "geminga" ]]; then
+    updatedb -l 0 -o ~/.locate.db -U ~/ \
+        -e /home/prok/.kde4/share/apps/okular/docdata \
+        -e /home/prok/.wine \
+        -e /home/prok/.backup \
+        -n .git
+else
+    updatedb -l 0 -o ~/.locate-home.db -U ~/ \
+        -n ".git .kde .backup"
+    updatedb -l 0 -o ~/.locate-data.db -U /data \
+        -n ".git .kde .backup"
+fi
