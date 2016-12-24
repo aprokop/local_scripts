@@ -26,6 +26,7 @@ cd $HOME
 [[ -f $HOME/.bashrc ]] && mv $HOME/.bashrc $HOME/.bashrc.orig
 ln -s $P/configs/.bashrc .
 ln -s $P/configs/.gitconfig .
+ln -s $P/configs/.git_templates .
 ln -s $P/configs/.tmux.conf .
 ln -s $P/configs/.vimrc .
 ln -s $P/configs/.vim .
