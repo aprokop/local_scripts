@@ -1,0 +1,9 @@
+#!/bin/bash
+state=`grep "^#.*snowman.ornl.gov" ~/.ssh/config`
+if [[ "$state" == "" ]]; then
+    # Comment
+    sed -i "" '/snowman.ornl.gov/ s/^/#/' ~/.ssh/config
+else
+    # Uncomment
+    sed -i "" '/snowman.ornl.gov/ s/^#//' ~/.ssh/config
+fi
