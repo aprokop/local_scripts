@@ -10,7 +10,8 @@ RUN dnf -y install \
     less htop wget \
     mlocate net-tools \
     automake autoconf make cmake ninja-build \
-    gcc gcc-gfortran gcc-c++ clang ccache \
+    gcc gcc-gfortran gcc-c++ clang ccache gdb \
+    ctags-etags \
     openmpi openmpi-devel hdf5 hdf5-devel hdf5-openmpi hdf5-openmpi-devel \
     netcdf netcdf-devel netcdf-openmpi-devel netcdf-openmpi \
     blas blas-devel lapack lapack-devel boost boost-devel atlas atlas-devel \
