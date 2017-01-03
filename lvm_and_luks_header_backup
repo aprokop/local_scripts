@@ -1,0 +1,27 @@
+#!/bin/bash
+
+## Create backup directory
+mkdir lvm_and_luks_backup
+cd lvm_and_luks_backup/
+
+## List devices
+lsblk
+
+## Backup local drives
+# Backup LVM
+cryptsetup luksHeaderBackup --header-backup-file local_root_luks_header.backup /dev/fedora_negima/00
+cryptsetup luksHeaderBackup --header-backup-file local_home_luks_header.backup /dev/fedora_negima/01
+cryptsetup luksHeaderBackup --header-backup-file local_swap_luks_header.backup /dev/fedora_negima/02
+# Backup standalone
+cryptsetup luksHeaderBackup --header-backup-file local_sda4_luks_header.backup /dev/sda4
+
+## Backup external drives
+cryptsetup luksHeaderBackup --header-backup-file external_sdb1_luks_header.backup /dev/sdb1
+cryptsetup luksHeaderBackup --header-backup-file external_sdb2_luks_header.backup /dev/sdb2
+
+## Backup LVM configuration
+cp -Rafv /etc/lvm/ lvm-backup
+
+## Copy backup to boot (unencrypted drive)
+cd ..
+cp -r lvm_and_luks_backup /boot
