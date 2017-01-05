@@ -24,15 +24,33 @@ git clone ${GIT_ADDRESS}aprokop/dotfiles         $P/configs
 git clone ${GIT_ADDRESS}aprokop/local_scripts    $P/scripts
 git clone ${GIT_ADDRESS}aprokop/package_configs  $P/trilinos_configs
 
+# Initialize submodule
+cd $P/configs
+git submodule init
+GIT_ALLOW_PROTOCOL="hg:git:https:ssh" git submodule update
+cd -
+
+# Link to ~/bin
+cd $HOME/bin
+ln -s $P/scripts/ninjac .
+cd -
+
+cd $P/configs/.emacs.d/org-mode
+make autoloads
+cd -
+
 # Create symlinks
 cd $HOME
-[[ -f $HOME/.bashrc ]] && mv $HOME/.bashrc $HOME/.bashrc.orig
+[[ -f $HOME/.bashrc ]] && [[ ! -f $HOME/.bashrc.orig ]] && mv $HOME/.bashrc $HOME/.bashrc.orig
 ln -s $P/configs/.bashrc .
 ln -s $P/configs/.gitconfig .
 ln -s $P/configs/.git_templates .
 ln -s $P/configs/.tmux.conf .
 ln -s $P/configs/.vimrc .
 ln -s $P/configs/.vim .
+ln -s $P/configs/.emacs .
+ln -s $P/configs/.emacs.d .
+
 
 # Setup VIM
 mkdir -p $HOME/.vim/bundle
