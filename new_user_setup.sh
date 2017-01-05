@@ -17,9 +17,12 @@ read github
 if [ "$github" != "yes" ]; then
     exit 1
 fi
-git clone ssh://git@ssh.github.com:443/aprokop/dotfiles         $P/configs
-git clone ssh://git@ssh.github.com:443/aprokop/local_scripts    $P/scripts
-git clone ssh://git@ssh.github.com:443/aprokop/package_configs  $P/trilinos_configs
+
+GIT_ADDRESS="git@github.com:"
+# GIT_ADDRESS="ssh://git@ssh.github.com:443/"
+git clone ${GIT_ADDRESS}aprokop/dotfiles         $P/configs
+git clone ${GIT_ADDRESS}aprokop/local_scripts    $P/scripts
+git clone ${GIT_ADDRESS}aprokop/package_configs  $P/trilinos_configs
 
 # Create symlinks
 cd $HOME
