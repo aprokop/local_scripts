@@ -27,12 +27,18 @@ git clone ${GIT_ADDRESS}aprokop/package_configs  $P/trilinos_configs
 # Initialize submodule
 cd $P/configs
 git submodule init
-GIT_ALLOW_PROTOCOL="hg:git:https:ssh" git submodule update
+GIT_ALLOW_PROTOCOL="hg:git:http:https:ssh" git submodule update
 cd -
 
 # Link to ~/bin
 cd $HOME/bin
 ln -s $P/scripts/ninjac .
+ln -s $P/scripts/updatedb_user .
+if [[ -f /usr/bin/ccache ]]; then
+    for compiler in cc clang clang++ gcc g++; do
+        ln -s /usr/bin/ccache $compiler
+    done
+fi
 cd -
 
 cd $P/configs/.emacs.d/org-mode
@@ -43,14 +49,17 @@ cd -
 cd $HOME
 [[ -f $HOME/.bashrc ]] && [[ ! -f $HOME/.bashrc.orig ]] && mv $HOME/.bashrc $HOME/.bashrc.orig
 ln -s $P/configs/.bashrc .
-ln -s $P/configs/.gitconfig .
-ln -s $P/configs/.git_templates .
-ln -s $P/configs/.tmux.conf .
-ln -s $P/configs/.vimrc .
-ln -s $P/configs/.vim .
+ln -s $P/configs/.bash_profile .
+ln -s $P/configs/.dir_colors .
 ln -s $P/configs/.emacs .
 ln -s $P/configs/.emacs.d .
-
+ln -s $P/configs/.gdbinit .
+ln -s $P/configs/.gitconfig .
+ln -s $P/configs/.git_templates .
+ln -s $P/configs/.tigrc .
+ln -s $P/configs/.tmux.conf .
+ln -s $P/configs/.vim .
+ln -s $P/configs/.vimrc .
 
 # Setup VIM
 mkdir -p $HOME/.vim/bundle
