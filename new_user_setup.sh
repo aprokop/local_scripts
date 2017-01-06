@@ -32,6 +32,7 @@ cd -
 
 # Link to ~/bin
 cd $HOME/bin
+ln -s $P/scripts/be_quiet .
 ln -s $P/scripts/ninjac .
 ln -s $P/scripts/updatedb_user .
 if [[ -f /usr/bin/ccache ]]; then
