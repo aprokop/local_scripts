@@ -8,5 +8,7 @@ SHELL=/bin/bash
 # │ │ └─────────────── day of month (1 - 31)
 # │ └──────────────────── hour (0 - 23)
 # └───────────────────────── min (0 - 59)
-#45 2 * * * /home/aprokop/bin/updatedb_user
-## 40 17 * * 6 tmpwatch -am 30d /tmp
+# 45  2 * * * /home/user/bin/updatedb_user
+# 40 17 * * 6 tmpwatch -am 30d /tmp
+#  0  3 * * * /home/user/bin/backup.snapshots.sh daily
+# 30  * * * * /home/user/bin/backup.snapshots.sh hourly
