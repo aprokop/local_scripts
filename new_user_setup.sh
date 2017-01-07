@@ -89,6 +89,4 @@ cd $HOME
 mkdir -p $HOME/local/share/bashmarks
 cd $HOME/local/share/bashmarks
 ln -s $HOME/.personal/scripts/bashmarks/bashmarks.sh
-# Patch
-sed -i 's/function s/function save/' $HOME/.personal/scripts/bashmarks/bashmarks.sh
 cd $HOME
