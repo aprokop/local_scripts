@@ -79,3 +79,8 @@ mkdir -p $HOME/local/share/bash-completion/completions
 cd $HOME/local/share/bash-completion/completions
 ln -s $HOME/.personal/scripts/bash_completions/tmux
 cd $HOME
+
+mkdir -p $HOME/local/share/cdargs
+cd $HOME/local/share/cdargs
+ln -s $HOME/.personal/scripts/cdargs-bash.sh
+cd $HOME
