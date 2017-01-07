@@ -126,7 +126,7 @@ function _bookmark_name_valid {
 }
 
 # completion command
-function _comp {
+function _bashmarks_comp {
     local curw
     COMPREPLY=()
     curw=${COMP_WORDS[COMP_CWORD]}
@@ -135,7 +135,7 @@ function _comp {
 }
 
 # ZSH completion command
-function _compzsh {
+function _bashmarks_compzsh {
     reply=($(_l))
 }
 
@@ -158,12 +158,12 @@ function _purge_line {
 
 # bind completion command for g,p,d to _comp
 if [ $ZSH_VERSION ]; then
-    compctl -K _compzsh bashmarks_j
-    compctl -K _compzsh bashmarks_p
-    compctl -K _compzsh bashmarks_d
+    compctl -K _bashmarks_compzsh bashmarks_g
+    compctl -K _bashmarks_compzsh bashmarks_p
+    compctl -K _bashmarks_compzsh bashmarks_d
 else
     shopt -s progcomp
-    complete -F _comp bashmarks_j
-    complete -F _comp bashmarks_p
-    complete -F _comp bashmarks_d
+    complete -F _bashmarks_comp bashmarks_g
+    complete -F _bashmarks_comp bashmarks_p
+    complete -F _bashmarks_comp bashmarks_d
 fi
