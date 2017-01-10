@@ -65,6 +65,7 @@ ln -s $P/configs/.gitconfig .
 ln -s $P/configs/.git_templates .
 ln -s $P/configs/.tigrc .
 ln -s $P/configs/.tmux.conf .
+ln -s $P/configs/.tmux .
 ln -s $P/configs/.vim .
 ln -s $P/configs/.vimrc .
 
