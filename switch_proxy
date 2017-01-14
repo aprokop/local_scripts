@@ -1,9 +1,32 @@
-#!/bin/bash
-state=`grep "^#.*snowman.ornl.gov" ~/.ssh/config`
+#!/usr/bin/env bash
+
+# Hardcoded location of the config
+config="$HOME/.ssh/config"
+
+state=`grep "^#.*snowman.ornl.gov" $config`
 if [[ "$state" == "" ]]; then
-    # Comment
-    sed -i "" '/snowman.ornl.gov/ s/^/#/' ~/.ssh/config
+    state="ornl"
 else
-    # Uncomment
-    sed -i "" '/snowman.ornl.gov/ s/^#//' ~/.ssh/config
+    state="no"
 fi
+
+if [[ "$1" == "status" ]] || [[ "$1" == "st" ]]; then
+    echo "Current status \"$state proxy\""
+    exit 0
+fi
+
+if [[ "$state" == "ornl" ]]; then
+    # Comment ORNL proxy
+    sed -i "" '/snowman.ornl.gov/ s/^/#/' $config
+    # Uncomment ORNL login
+    sed -i "" '/login1.ornl.gov/ s/^#//' $config
+    echo 'Switched to "no proxy"'
+else
+    # Uncomment ORNL proxy
+    sed -i "" '/snowman.ornl.gov/ s/^#//' $config
+    # Comment ORNL login
+    sed -i "" '/login1.ornl.gov/ s/^/#/' $config
+    echo 'Switched to "ornl proxy"'
+fi
+
+exit 0
