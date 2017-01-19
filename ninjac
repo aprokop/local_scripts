@@ -25,7 +25,7 @@ elif test -e        "../../../../../../$ninjaf"; then s=6; ninjadir="../../../..
 elif test -e     "../../../../../../../$ninjaf"; then s=7; ninjadir="../../../../../../../"
 elif test -e  "../../../../../../../../$ninjaf"; then s=8; ninjadir="../../../../../../../../"
 else
-  echo "Ninja build files not found, trying to use make..."
+  # echo "Ninja build files not found, trying to use make..."
   make $ninja_args
   exit $?
 fi
