@@ -30,12 +30,6 @@ git submodule init
 GIT_ALLOW_PROTOCOL="hg:git:http:https:ssh" git submodule update
 cd -
 
-cd $P/scripts
-git submodule init
-git submodule update
-cd -
-
-
 # Link to ~/bin
 cd $HOME/bin
 ln -s $P/scripts/be_quiet .
@@ -87,7 +81,7 @@ cd $HOME/local/share/bash-completion/completions
 ln -s $HOME/.personal/scripts/bash_completions/tmux
 cd $HOME
 
-mkdir -p $HOME/local/share/bashmarks
-cd $HOME/local/share/bashmarks
-ln -s $HOME/.personal/scripts/bashmarks/bashmarks.sh
+mkdir -p $HOME/local/share/cdargs
+cd $HOME/local/share/cdargs
+ln -s $HOME/.personal/scripts/cdargs-bash.sh
 cd $HOME
