@@ -9,7 +9,13 @@ if [ "$?" -ne "0" ]; then
   exit 0
 fi
 
-emacs_pid=`pgrep emacs`
+unamestr=`uname`
+if [[ "$unamestr" == "Darwin" ]]; then
+  # Mac adds "/" at the end of readlink
+  cur_org=`echo $cur_org | sed 's/\/$//'`
+fi
+
+emacs_pid=`pgrep emacs || pgrep Emacs`
 if [ "$?" -ne "1" ]; then
     echo "Emacs process is running. Terminate first before switching..."
     exit 0
