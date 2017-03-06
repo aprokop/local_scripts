@@ -9,12 +9,19 @@ else
 fi
 ssh-add
 
-# Clone repos
+# Create .personal
 P=$HOME/.personal
 mkdir -p $P
+
+# Clone repos
 echo -n "Have you uploaded ssh key to GitHub? [yes/no] "
 read github
 if [ "$github" != "yes" ]; then
+    exit 1
+fi
+echo -n "Have you installed vim, emacs, git-remote-hg? [yes/no] "
+read packages
+if [ "$packages" != "yes" ]; then
     exit 1
 fi
 
@@ -31,6 +38,7 @@ GIT_ALLOW_PROTOCOL="hg:git:http:https:ssh" git submodule update
 cd -
 
 # Link to ~/bin
+mkdir -p $HOME/bin
 cd $HOME/bin
 ln -s $P/scripts/be_quiet .
 ln -s $P/scripts/ninjac .
@@ -66,9 +74,12 @@ ln -s $P/configs/.vimrc .
 # Setup VIM
 mkdir -p $HOME/.vim/bundle
 git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/vundle.vim
-vim +PluginInstall +qall
-cd $HOME/.vim/bundle/youcompleteme
-cd ./install.py --clang-completer
+command -v vim &>/dev/null
+if [ $? -eq 1 ]; then
+    vim +PluginInstall +qall
+    cd $HOME/.vim/bundle/youcompleteme
+    ./install.py --clang-completer
+fi
 cd $HOME
 
 mkdir -p $HOME/local/share/git
