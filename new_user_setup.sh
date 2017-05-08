@@ -42,6 +42,7 @@ mkdir -p $HOME/bin
 cd $HOME/bin
 ln -s $P/scripts/be_quiet .
 ln -s $P/scripts/ninjac .
+ln -s $P/scripts/split_path .
 ln -s $P/scripts/updatedb_user .
 if [[ -f /usr/bin/ccache ]]; then
     for compiler in cc clang clang++ gcc g++; do
