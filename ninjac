@@ -47,12 +47,16 @@ else
   targets=""
   which parallel &> /dev/null
   if [[ "$?" == "0" ]]; then
-    $NINJA $ninja_args `LANG="C" grep "^build $curdir" $ninjaf | parallel --no-notice --pipe "cut -f 1 -d: | sed 's/^build //'"`
-    rc=$?
+    targets=`LANG="C" grep "^build $curdir" $ninjaf | parallel --no-notice --pipe "cut -f 1 -d: | sed 's/^build //'"`
   else
-    $NINJA $ninja_args `LANG="C" grep "^build $curdir" $ninjaf | cut -f 1 -d: | sed 's/^build //'`
-    rc=$?
+    targets=`LANG="C" grep "^build $curdir" $ninjaf | cut -f 1 -d: | sed 's/^build //'`
   fi
+  if [ "$targets" == "" ]; then
+      echo "No targets founds"
+      exit 1
+  fi
+  $NINJA $ninja_args $targets
+  rc=$?
 fi
 cd $origdir
 
