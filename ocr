@@ -12,7 +12,7 @@ name="${name%.*}"
 
 if [ "$ext" = "pdf" ]; then
     echo "Tesseract does not work on pdf, converting to tiff"
-    convert -density 300 $file -depth 8 $name.tiff
+    convert -density 300 $file -alpha deactivate -depth 8 $name.tiff
     file="$name.tiff"
 fi
 
