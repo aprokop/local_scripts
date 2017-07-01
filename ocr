@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+if [ "$?" -ne "0" ]; then
+  echo "Please provide input filename."
+  exit 0
+fi
+
+file="$1"
+name=$(basename "$file")
+ext="${name##*.}"
+name="${name%.*}"
+
+if [ "$ext" = "pdf" ]; then
+    echo "Tesseract does not work on pdf, converting to tiff"
+    convert -density 300 $file -depth 8 $name.tiff
+    file="$name.tiff"
+fi
+
+tesseract $file $name
+
+if [ $file != $1 ]; then
+    rm $file
+fi
