@@ -47,9 +47,9 @@ else
   targets=""
   which parallel &> /dev/null
   if [[ "$?" == "0" ]]; then
-    targets=`LANG="C" grep "^build $curdir" $ninjaf | parallel --no-notice --pipe "cut -f 1 -d: | sed 's/^build //'"`
+    targets=`LANG="C" grep "^build $curdir" $ninjaf | grep -v ": phony" | grep -v "CUSTOM_COMMAND" | parallel --no-notice --pipe "cut -f 1 -d: | sed 's/^build //'"`
   else
-    targets=`LANG="C" grep "^build $curdir" $ninjaf | cut -f 1 -d: | sed 's/^build //'`
+    targets=`LANG="C" grep "^build $curdir" $ninjaf | grep -v ": phony" | grep -v "CUSTOM_COMMAND" | cut -f 1 -d: | sed 's/^build //'`
   fi
   if [ "$targets" == "" ]; then
       echo "No targets founds"
