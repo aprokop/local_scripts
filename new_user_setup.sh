@@ -29,10 +29,7 @@ GIT_ADDRESS="git@github.com:"
 # Initialize submodule
 cd $P/configs
 git submodule init
-GIT_ALLOW_PROTOCOL="hg:git:http:https:ssh" git submodule update
-if [ $? -ne 0 ]; then
-    echo "Could not update some configs submodules. Do you have git-remote-hg installed?"
-fi
+GIT_ALLOW_PROTOCOL="git:http:https:ssh" git submodule update
 cd ~
 
 # Link to ~/bin
