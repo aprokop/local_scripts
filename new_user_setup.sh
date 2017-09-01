@@ -19,11 +19,6 @@ read github
 if [ "$github" != "yes" ]; then
     exit 1
 fi
-echo -n "Have you installed vim, emacs, git-remote-hg? [yes/no] "
-read packages
-if [ "$packages" != "yes" ]; then
-    exit 1
-fi
 
 GIT_ADDRESS="git@github.com:"
 # GIT_ADDRESS="ssh://git@ssh.github.com:443/"
@@ -35,6 +30,9 @@ GIT_ADDRESS="git@github.com:"
 cd $P/configs
 git submodule init
 GIT_ALLOW_PROTOCOL="hg:git:http:https:ssh" git submodule update
+if [ $? -ne 0 ]; then
+    echo "Could not update some configs submodules. Do you have git-remote-hg installed?"
+fi
 cd ~
 
 # Link to ~/bin
@@ -82,6 +80,8 @@ if [ $? -eq 1 ]; then
     vim +PluginInstall +qall
     cd $HOME/.vim/bundle/youcompleteme
     ./install.py --clang-completer
+else
+    echo "vim is missing"
 fi
 cd $HOME
 
