@@ -62,7 +62,7 @@ ln -s $P/configs/.dir_colors .
 ln -s $P/configs/.emacs .
 ln -s $P/configs/.emacs.d .
 ln -s $P/configs/.gdbinit .
-ln -s $P/configs/.gitconfig .
+# Linking of .gitconfig happens at the end of the script
 ln -s $P/configs/.git_templates .
 ln -s $P/configs/.mime.types .
 ln -s $P/configs/.screenrc .
@@ -99,3 +99,9 @@ mkdir -p $HOME/local/share/cdargs
 cd $HOME/local/share/cdargs
 ln -s $HOME/.personal/scripts/cdargs-bash.sh
 cd $HOME
+
+# Create .gitconfig symlink last as it may have problems with push.simple
+ln -s $P/configs/.gitconfig .
+
+# Check for the presence of programs
+command -v &>/dev/null emacs || echo "emacs is missing"
