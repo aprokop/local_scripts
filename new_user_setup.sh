@@ -7,7 +7,7 @@ else
     ssh-keygen -t rsa -b 2048
     eval `ssh-agent -s`
 fi
-ssh-add
+ssh-add -l || ssh-add
 
 # Create .personal
 P=$HOME/.personal
