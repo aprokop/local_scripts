@@ -12,12 +12,6 @@ xstring="${xstring} --exclude=.git"
 xstring="${xstring} --exclude=$PERSONAL/configs/.vim/bundle"
 xstring="${xstring} --exclude=$PERSONAL/configs/.emacs.d/auto-save-list"
 
-echo -n "Have you generated .kdb version? [yes/no] "
-read kdb
-if [ "$kdb" != "yes" ]; then
-    exit 1
-fi
-
 # Clean up okular
 cd $PERSONAL/okular_docdata
 ./clean.sh
