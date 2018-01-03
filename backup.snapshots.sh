@@ -15,6 +15,7 @@ n=15
 CP=/bin/cp
 ECHO=/bin/echo
 ID=/usr/bin/id
+MKDIR=/usr/bin/mkdir
 MV=/bin/mv
 RM=/bin/rm
 RSYNC=/usr/bin/rsync
@@ -45,6 +46,9 @@ if (( `$ID -u` != 0 )); then { $ECHO "Sorry, must be root.  Exiting..."; exit; }
 #   $NAME.3
 #   $NAME.4
 #   $NAME.5
+
+# step 0
+[ -d $SNAPSHOT_RW ] || $MKDIR $SNAPSHOT_RW
 
 # step 1
 # shift middle snapshots by one increment, recycle oldest
