@@ -60,7 +60,9 @@ use IPC::Open3;
 
 sub initDefaults
 {
-   $compilerPaths{"nvcc"} = "/usr/bin/nvcc";
+   # Find all nvcc in the $PATH, and remove ourselves
+   my($self) = $0;
+   $compilerPaths{"nvcc"} = `which -a nvcc | grep -v $self | tr -d '\n'`;
 
    $nocolor{"dumb"} = "true";
 
