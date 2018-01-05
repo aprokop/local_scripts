@@ -1,6 +1,6 @@
 #!/bin/bash
-
-NINJA="ninja-build"
+command -v &>/dev/null ninja       && NINJA="ninja"
+command -v &>/dev/null ninja-build && NINJA="ninja-build"
 
 # Parse command line arguments
 ninja_args="$@"
