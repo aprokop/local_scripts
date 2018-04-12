@@ -61,6 +61,7 @@ ln -s $P/configs/.emacs.d .
 ln -s $P/configs/.gdbinit .
 # Linking of .gitconfig happens at the end of the script
 ln -s $P/configs/.git_templates .
+ln -s $P/configs/.inputrc
 ln -s $P/configs/.mime.types .
 ln -s $P/configs/.screenrc .
 ln -s $P/configs/.tigrc .
