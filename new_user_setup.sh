@@ -71,6 +71,7 @@ ln -s $P/configs/.vim .
 ln -s $P/configs/.vimrc .
 
 # Setup VIM
+mkdir -p $HOME/.vim/undo
 mkdir -p $HOME/.vim/bundle
 git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/vundle.vim
 command -v vim &>/dev/null
@@ -91,6 +92,7 @@ cd $HOME
 mkdir -p $HOME/local/share/bash-completion/completions
 cd $HOME/local/share/bash-completion/completions
 ln -s $HOME/.personal/scripts/bash_completions/tmux
+ln -s $HOME/.personal/scripts/bash_completions/git
 cd $HOME
 
 mkdir -p $HOME/local/share/cdargs
