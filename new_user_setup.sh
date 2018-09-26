@@ -119,3 +119,6 @@ cd $HOME
 
 # Create .gitconfig symlink last as it may have problems with push.simple
 ln -s $P/configs/.gitconfig
+
+echo "Do not forget to set crontab for:"
+echo "  * updatedb_user"
