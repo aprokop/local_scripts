@@ -24,7 +24,6 @@ GIT_ADDRESS="git@github.com:"
 # GIT_ADDRESS="ssh://git@ssh.github.com:443/"
 [ -d $P/configs ]          || git clone ${GIT_ADDRESS}aprokop/dotfiles         $P/configs
 [ -d $P/scripts ]          || git clone ${GIT_ADDRESS}aprokop/local_scripts    $P/scripts
-[ -d $P/trilinos_configs ] || git clone ${GIT_ADDRESS}aprokop/package_configs  $P/trilinos_configs
 
 # Initialize submodule
 cd $P/configs
