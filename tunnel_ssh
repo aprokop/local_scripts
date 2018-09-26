@@ -1,2 +1,2 @@
 #!/bin/bash
-ssh -L 5900:geminga:22 aprokop@software-login.sandia.gov
+ssh -L 5900:final_host:22 user@proxy
