@@ -46,10 +46,6 @@ if [[ -f /usr/bin/ccache ]]; then
 fi
 cd -
 
-cd $P/configs/.emacs.d/org-mode
-make autoloads
-cd -
-
 # Create symlinks
 cd $HOME
 [[ -f $HOME/.bashrc ]] && [[ ! -f $HOME/.bashrc.orig ]] && mv $HOME/.bashrc $HOME/.bashrc.orig
@@ -70,20 +66,6 @@ ln -s $P/configs/.tmux .
 ln -s $P/configs/.vim .
 ln -s $P/configs/.vimrc .
 
-# Setup VIM
-mkdir -p $HOME/.vim/undo
-mkdir -p $HOME/.vim/bundle
-git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/vundle.vim
-command -v vim &>/dev/null
-if [ $? -eq 1 ]; then
-    vim +PluginInstall +qall
-    cd $HOME/.vim/bundle/youcompleteme
-    ./install.py --clang-completer
-else
-    echo "vim is missing"
-fi
-cd $HOME
-
 mkdir -p $HOME/local/share/git
 cd $HOME/local/share/git
 ln -s $HOME/.personal/scripts/git-prompt.sh .
@@ -100,8 +82,39 @@ cd $HOME/local/share/cdargs
 ln -s $HOME/.personal/scripts/cdargs-bash.sh
 cd $HOME
 
-# Create .gitconfig symlink last as it may have problems with push.simple
-ln -s $P/configs/.gitconfig .
+mkdir -p $HOME/.ccopy
+mkdir -p $HOME/tmp
 
-# Check for the presence of programs
-command -v &>/dev/null emacs || echo "emacs is missing"
+# Helper
+chkcmd="command -v &>/dev/null"
+
+# Setup VIM
+mkdir -p $HOME/.vim/undo
+mkdir -p $HOME/.vim/bundle
+git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/vundle.vim
+$chkcmd vim
+if [ $? -eq 0 ]; then
+    vim +PluginInstall +qall
+
+    $chkcmd cmake
+    if [ $? -eq 0 ]; then
+        cd $HOME/.vim/bundle/youcompleteme
+        ./install.py --clang-completer
+    fi
+else
+    echo "vim is missing"
+fi
+cd $HOME
+
+# Setup Emacs
+$chkcmd emacs
+if [ $? -eq 0 ]; then
+    cd $P/configs/.emacs.d/org-mode
+    make autoloads
+else
+    echo "emacs is missing"
+fi
+cd $HOME
+
+# Create .gitconfig symlink last as it may have problems with push.simple
+ln -s $P/configs/.gitconfig
