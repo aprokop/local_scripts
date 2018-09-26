@@ -1,13 +1,13 @@
 #!/bin/bash
 host=`hostname`
 
-if [[ "$host" != "geminga" ]] && [[ "$host" != "mbpro617"* ]]; then
+if [[ "$host" != "geminga" ]] && [[ "$host" != "ramjet" ]]; then
     updatedb -l 0 -o ~/.locate.db -U $HOME/ \
         -e /home/prok/.kde4/share/apps/okular/docdata \
         -e /home/prok/.wine \
         -e /home/prok/.backup \
         -n .git
-elif [[ "$host" == "mbpro617"* ]]; then
+elif [[ "$host" == "ramjet" ]]; then
     updatedb --output=$HOME/.locate.db --localpaths=$HOME
 else
     updatedb -l 0 -o ~/.locate-home.db -U $HOME/ \
