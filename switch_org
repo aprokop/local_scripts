@@ -15,17 +15,17 @@ if [[ "$unamestr" == "Darwin" ]]; then
   cur_org=`echo $cur_org | sed 's/\/$//'`
 fi
 
-emacs_pid=`pgrep emacs || pgrep Emacs`
-if [ "$?" -ne "1" ]; then
-    echo "Emacs process is running. Terminate first before switching..."
-    exit 0
-fi
-
 if [ "$1" == "status" ] || [ "$1" == "st" ]; then
   if   [ "$cur_org" == "org_personal" ]; then echo 'Current status "personal"'
   elif [ "$cur_org" == "org_work" ];     then echo 'Current status "work"'
   else echo "Current status <unknown> ($cur_org)"; fi
   exit 0
+fi
+
+emacs_pid=`pgrep emacs || pgrep Emacs`
+if [ "$?" -ne "1" ]; then
+    echo "Emacs process is running. Terminate first before switching..."
+    exit 0
 fi
 
 if   [ "$cur_org" == "org_personal" ]; then
