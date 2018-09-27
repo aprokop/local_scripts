@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Edit ssh configuration (manual)
+mkdir -p "$HOME/.ssh/tmp"
+
 # Setup ssh keys
 if [[ -f $HOME/.ssh/id_rsa ]]; then
     echo "Found existing ssh key"
