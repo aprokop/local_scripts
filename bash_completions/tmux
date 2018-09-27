@@ -33,7 +33,7 @@ _tmux()
             # NB: Since the failed to connect message is displayed on stderr, we
             # need to pipe both stdout and stderr to cut. Therefore we are piping
             # with |& rather than just |.
-            currentSessions=$(tmux ls |& cut -d : -f 1)
+            currentSessions=$(tmux ls 2>&1 | cut -d : -f 1)
             if [ "${currentSessions[0]}" = "failed to connect to server" ]; then
                 # we don't want to display any options, so clear the array.
                 currentSessions=$( )
