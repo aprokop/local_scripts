@@ -36,9 +36,11 @@ if [ "$CMD" = "mount" ]; then
         exit 3
     fi
 
+    [[ x"$(dmsetup ls | grep $NAME)" != x"" ]] && cryptsetup luksClose $NAME
     cryptsetup luksOpen $DEV $NAME
-    if [[ $? -ne 0 ]]; then
-        echo "Could not open LUKS volume"
+    r=$?
+    if [[ $r -ne 0 ]]; then
+	echo "Could not open LUKS volume (return code $r)"
         exit 4
     fi
 
