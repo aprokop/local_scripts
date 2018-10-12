@@ -41,6 +41,7 @@ ln -s $P/scripts/be_quiet .
 ln -s $P/scripts/ninjac .
 ln -s $P/scripts/split_path .
 ln -s $P/scripts/updatedb_user .
+ln -s $P/scripts/latexmk.pl .
 if [[ -f /usr/bin/ccache ]]; then
     for compiler in cc clang clang++ gcc g++; do
         ln -s /usr/bin/ccache $compiler
