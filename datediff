@@ -1,5 +1,20 @@
 #!/bin/bash
 
-date1=2010-03-15
-date2=2012-04-16
-echo $((($(date -u -d $date1 +%s) - $(date -u -d $date2 +%s)) / 86400))
+HELP_STRING="Help:\n\tdatediff <date1> <date2>"
+
+if [[ $# -eq 1 ]]; then
+    if [ $1 = "-h" ]; then
+        echo -e $HELP_STRING
+        exit 0
+    fi
+fi
+
+if [[ $# -lt 2 ]]; then
+    echo "Wrong number of arguments"
+    echo -e $HELP_STRING
+    exit 1
+fi
+
+date1=$1
+date2=$2
+echo $((($(date -u -d $date2 +%s) - $(date -u -d $date1 +%s)) / 86400)) days
