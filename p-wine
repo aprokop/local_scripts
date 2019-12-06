@@ -1,6 +1,0 @@
-#!/bin/bash
-wine "$@"
-
-while [ -n "`ps ax | egrep -v grep | egrep wineserver | sed -e 's/[ ]*\(\d*\)[\t ]*?.*/\1/'`" ]; do
-    sleep 5s;
-done
