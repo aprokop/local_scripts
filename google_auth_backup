@@ -4,9 +4,16 @@
 # Computer requires Android Developer Tools (adb)and SQLite 3.
 
 # Connect your device in USB debugging mode.
+
+# Method 1 (without Magisk)
 $ adb root
 $ adb pull /data/data/com.google.android.apps.authenticator2/databases/databases
 $ sqlite3 ./databases "select * from accounts" > google_auth_database
 $ rm ./databases
+
+# Method 2 (with Magisk)
+$ adb shell
+$ su
+$ sqlite3 /data/data/com.google.android.apps.authenticator2/databases/databases "select * from accounts"
 
 # Copy to password manager
