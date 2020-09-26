@@ -38,6 +38,7 @@ cd ~
 mkdir -p $HOME/bin
 cd $HOME/bin
 ln -s $P/scripts/be_quiet .
+ln -s $P/scripts/diff-highlight .
 ln -s $P/scripts/ninjac .
 ln -s $P/scripts/split_path .
 ln -s $P/scripts/updatedb_user .
