@@ -23,8 +23,8 @@ if [ "$github" != "yes" ]; then
     exit 1
 fi
 
-GIT_ADDRESS="git@github.com:"
-# GIT_ADDRESS="ssh://git@ssh.github.com:443/"
+# GIT_ADDRESS="git@github.com:"
+GIT_ADDRESS="ssh://git@ssh.github.com:443/"
 [ -d $P/configs ]          || git clone ${GIT_ADDRESS}aprokop/dotfiles         $P/configs
 [ -d $P/scripts ]          || git clone ${GIT_ADDRESS}aprokop/local_scripts    $P/scripts
 
@@ -61,6 +61,7 @@ ln -s $P/configs/.emacs.d .
 ln -s $P/configs/.gdbinit .
 # Linking of .gitconfig happens at the end of the script
 ln -s $P/configs/.git_templates .
+ln -s $P/configs/.gitignore_global .
 ln -s $P/configs/.inputrc .
 ln -s $P/configs/.latexmkrc .
 ln -s $P/configs/.mime.types .
